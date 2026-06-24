@@ -22,9 +22,14 @@ export default function Navbar() {
           
           <div className="hidden md:flex items-center gap-1">
             {links.map((link) => {
-              const href = link === 'Research' ? '/research' : link === 'Compare' ? '/compare' : link === 'Watchlist' ? '/watchlist' : link === 'Portfolio' ? '/portfolio' : `/${link.toLowerCase()}`;
-              // Research highlights on '/' or '/research'
-              const isActive = pathname === href || (link === 'Research' && pathname === '/');
+              const href = link === 'Research' ? '/' : `/${link.toLowerCase()}`;
+              let isActive = false;
+              if (link === 'Research') {
+                isActive = pathname === '/' || pathname === '/research' || pathname.startsWith('/stock/');
+              } else {
+                isActive = pathname.startsWith(href);
+              }
+              
               return (
                 <Link
                   key={link}
