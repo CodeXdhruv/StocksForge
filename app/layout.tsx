@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 import { ClerkProvider } from '@clerk/nextjs'
+import { dark } from '@clerk/themes'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
 export default function RootLayout({
@@ -21,7 +22,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: '#E8002D',
+          colorBackground: '#0a0a0a',
+          colorInputBackground: '#1a1a1a',
+          colorInputText: '#ffffff',
+        },
+        elements: {
+          card: 'bg-card border border-border shadow-sm rounded-2xl',
+          formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+          socialButtonsBlockButton: 'border border-border bg-background hover:bg-muted text-foreground',
+          socialButtonsBlockButtonText: 'font-semibold',
+          formFieldInput: 'bg-muted border-none focus-visible:ring-1 focus-visible:ring-primary rounded-lg',
+          footerActionLink: 'text-primary hover:text-primary/90',
+        }
+      }}
+    >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

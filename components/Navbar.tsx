@@ -7,12 +7,18 @@ import { usePathname } from 'next/navigation';
 
 import { useTheme } from 'next-themes';
 import { UserButton, SignInButton, SignUpButton, useAuth } from '@clerk/nextjs';
+import { useState, useEffect } from 'react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { isLoaded, userId } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const links = ['Research', 'Watchlist', 'Compare', 'Insights', 'Alerts', 'Portfolio'];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur-md dark:bg-background/80">
@@ -70,7 +76,7 @@ export default function Navbar() {
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors"
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {mounted ? (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />) : <div className="w-5 h-5" />}
             </button>
             <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors relative">
               <Bell className="w-5 h-5" />
