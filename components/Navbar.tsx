@@ -5,8 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 
+import { useTheme } from 'next-themes';
+import { UserButton, SignInButton, SignedIn, SignedOut } from '@clerk/nextjs';
+
 export default function Navbar() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const links = ['Research', 'Watchlist', 'Compare', 'Insights', 'Alerts', 'Portfolio'];
 
   return (
@@ -61,8 +65,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors">
-              <Sun className="w-5 h-5" />
+            <button 
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors relative">
               <Bell className="w-5 h-5" />
@@ -70,14 +77,16 @@ export default function Navbar() {
             </button>
             
             <div className="flex items-center gap-2 pl-2 border-l border-border">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>AM</AvatarFallback>
-              </Avatar>
-              <div className="hidden md:flex flex-col">
-                <span className="text-sm font-semibold leading-none">Arjun Mehta</span>
-                <span className="text-[10px] text-muted-foreground mt-1">Pro Plan</span>
-              </div>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="text-sm font-medium bg-foreground text-background px-4 py-1.5 rounded-lg">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
             </div>
           </div>
         </div>
