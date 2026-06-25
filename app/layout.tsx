@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import PageTransition from "@/components/PageTransition";
-import Footer from "@/components/Footer";
+import { Navbar } from "@/components/layout-elements";
+import { PageTransition } from "@/components/layout-elements";
+import { Footer } from "@/components/layout-elements";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
-import { ThemeProvider } from '@/components/ThemeProvider'
+import { ui } from '@clerk/ui'
+import { ThemeProvider } from "@/components/layout-elements";
 
 export default function RootLayout({
   children,
@@ -23,13 +24,12 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
+      ui={ui}
       appearance={{
-        baseTheme: dark,
+
         variables: {
           colorPrimary: '#E8002D',
           colorBackground: '#0a0a0a',
-          colorInputBackground: '#1a1a1a',
-          colorInputText: '#ffffff',
         },
         elements: {
           card: 'bg-card border border-border shadow-sm rounded-2xl',
@@ -50,7 +50,7 @@ export default function RootLayout({
       }}
     >
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}>
+        <body className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <Navbar />
             <main className="flex-1 flex flex-col">
