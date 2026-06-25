@@ -1,5 +1,5 @@
 "use client";
-import ResearchProgress from "@/components/ResearchProgress";
+import { ResearchProgress } from "@/components/research-tools";
 
 export default function ResearchPage() {
   return (

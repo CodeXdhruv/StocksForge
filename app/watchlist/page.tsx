@@ -1,5 +1,5 @@
 "use client";
-import WatchlistPanel from "@/components/WatchlistPanel";
+import { WatchlistPanel } from "@/components/dashboard-widgets";
 
 export default function WatchlistPage() {
   return (
