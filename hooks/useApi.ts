@@ -111,6 +111,16 @@ export function useApi() {
     return { data: finalData };
   };
 
+  const getDashboardData = async (category: string = 'Overview') => {
+    const { data } = await apiClient.get(`/market/dashboard?category=${category}`);
+    return data;
+  };
+
+  const getAdvancedCompare = async (t1: string, t2: string) => {
+    const { data } = await apiClient.get(`/compare/advanced?t1=${t1}&t2=${t2}`);
+    return data;
+  };
+
   return {
     apiClient,
     getWatchlist,
@@ -119,7 +129,9 @@ export function useApi() {
     getMarketMood,
     getTrendingStocks,
     getCompareStocks,
+    getAdvancedCompare,
     sendChatMessage,
     startResearch,
+    getDashboardData,
   };
 }
