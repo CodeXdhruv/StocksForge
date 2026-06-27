@@ -8,6 +8,10 @@ import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui";
 import { motion } from "framer-motion";
 import { AnimatedResearchCard } from "@/components/AnimatedResearchCard";
+import { MiniMarketChart } from "@/components/mini-market-chart";
+import { getTickerIconUrl } from "@/lib/utils";
+
+const TICKERS_FOR_RIBBON = ["AAPL", "NVDA", "MSFT", "AMZN", "TSLA", "META", "GOOGL", "NFLX", "AMD", "INTC", "BRK.B", "JPM", "V", "JNJ", "WMT", "PG", "MA"];
 
 export default function Home() {
   const [popularTickers, setPopularTickers] = useState<string[]>(["NVDA", "AAPL", "MSFT", "AMZN", "TSLA"]);
@@ -21,7 +25,11 @@ export default function Home() {
     getTrendingStocks()
       .then((res) => {
         if (res?.data?.trending && res.data.trending.length > 0) {
-          setPopularTickers(res.data.trending.slice(0, 5));
+          const filtered = res.data.trending.filter((ticker: string) => {
+            return !ticker.includes("-USD") && !ticker.startsWith("^");
+          });
+          const merged = Array.from(new Set([...filtered, "NVDA", "AAPL", "MSFT", "AMZN", "TSLA"])).slice(0, 5);
+          setPopularTickers(merged);
         }
       })
       .catch((err) => console.error("Failed to load trending stocks", err));
@@ -51,8 +59,8 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 lg:py-20">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <div className="container mx-auto px-4 pt-12 lg:pt-16 pb-8 min-h-[calc(100vh-80px)] flex flex-col justify-between gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-6 lg:mt-10">
         {/* Left Column */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
@@ -60,9 +68,6 @@ export default function Home() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col gap-6"
         >
-          <div className="text-primary font-semibold text-sm tracking-wider uppercase">
-            AI-POWERED INVESTMENT
-          </div>
           <h1 className="text-[48px] lg:text-[56px] font-bold leading-tight tracking-tight text-foreground">
             Smarter research.<br/>
             Better <span className="text-primary">investments.</span>
@@ -71,17 +76,17 @@ export default function Home() {
             All agents analyze market data, news, sentiment and fundamentals to deliver actionable insights you can trust.
           </p>
 
-          <form onSubmit={handleSearch} className="flex w-full max-w-md items-center space-x-2 mt-4 relative">
-            <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
+          <form onSubmit={handleSearch} className="flex w-full max-w-md items-center mt-4 relative">
+            <Search className="absolute left-4 w-5 h-5 text-muted-foreground pointer-events-none" />
             <Input 
               type="text" 
               placeholder="Search any company or ticker..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 rounded-xl border-border bg-card shadow-sm text-base"
+              className="pl-12 pr-14 h-14 rounded-xl border-border bg-card shadow-sm text-base w-full focus-visible:ring-1 focus-visible:ring-primary"
             />
-            <Button type="submit" size="icon" className="absolute right-2 h-10 w-10 bg-primary hover:bg-primary-hover text-primary-foreground rounded-lg">
-              <Search className="w-5 h-5" />
+            <Button type="submit" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center transition-all">
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </form>
 
@@ -93,8 +98,9 @@ export default function Home() {
                   key={ticker} 
                   variant="secondary" 
                   onClick={() => router.push(`/stock/${ticker}`)}
-                  className="hover:bg-muted cursor-pointer transition-colors px-3 py-1 text-xs"
+                  className="hover:bg-muted cursor-pointer transition-colors px-2.5 py-1 text-xs flex items-center gap-1.5"
                 >
+                  <img src={getTickerIconUrl(ticker)} alt="" className="w-4 h-4 rounded-sm bg-white shadow-sm" onError={(e) => (e.currentTarget.style.display = 'none')} />
                   {ticker}
                 </Badge>
               ))}
@@ -103,42 +109,55 @@ export default function Home() {
         </motion.div>
 
         {/* Right Column - Animated Research Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="relative h-full flex items-center justify-center"
+          className="relative h-full flex items-start justify-center lg:justify-end lg:pr-12 w-full lg:pt-2"
         >
-           <AnimatedResearchCard />
+          <div className="w-full max-w-lg lg:scale-105 origin-right">
+            <AnimatedResearchCard />
+          </div>
         </motion.div>
       </div>
 
+      {/* Rotating Ribbon - Full Width */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="mt-12 md:mt-16 overflow-hidden w-full relative border-y border-border/50 py-4 bg-muted/10"
+      >
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-background to-transparent z-10" />
+        <div className="flex animate-marquee gap-16 items-center text-muted-foreground font-mono text-sm">
+          {[...TICKERS_FOR_RIBBON, ...TICKERS_FOR_RIBBON, ...TICKERS_FOR_RIBBON].map((ticker, idx) => (
+            <div key={`${ticker}-${idx}`} className="flex items-center gap-3 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+              <img src={getTickerIconUrl(ticker)} alt={`${ticker} logo`} className="w-7 h-7 rounded-md bg-white shadow-sm" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              <span className="font-bold text-foreground text-base tracking-wider">{ticker}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
       {/* Live Market Pulse Section */}
-      <div className="mt-16">
+      <div className="mt-32 lg:mt-[25vh]">
         <h3 className="text-xl font-bold text-foreground">Live Market Pulse</h3>
         <p className="text-sm text-muted-foreground mb-6">Markets update in real-time</p>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             { 
-              id: "S&P 500", data: dashboardData?.marketPulse?.sp500,
-              path: "M0,25 Q20,22 40,15 T80,5 L100,0",
-              fillPath: "M0,30 L0,25 Q20,22 40,15 T80,5 L100,0 L100,30 Z"
+              id: "S&P 500", ticker: "^GSPC", data: dashboardData?.marketPulse?.sp500,
             },
             { 
-              id: "NASDAQ", data: dashboardData?.marketPulse?.nasdaq,
-              path: "M0,20 L10,25 L20,10 L30,20 L40,5 L50,15 L60,0 L70,10 L80,5 L90,15 L100,0",
-              fillPath: "M0,30 L0,20 L10,25 L20,10 L30,20 L40,5 L50,15 L60,0 L70,10 L80,5 L90,15 L100,0 L100,30 Z"
+              id: "NASDAQ", ticker: "^IXIC", data: dashboardData?.marketPulse?.nasdaq,
             },
             { 
-              id: "DOW JONES", data: dashboardData?.marketPulse?.dow,
-              path: "M0,15 L20,18 L40,14 L60,16 L80,13 L100,15",
-              fillPath: "M0,30 L0,15 L20,18 L40,14 L60,16 L80,13 L100,15 L100,30 Z"
+              id: "DOW JONES", ticker: "^DJI", data: dashboardData?.marketPulse?.dow,
             },
             { 
-              id: "VIX", data: dashboardData?.marketPulse?.vix,
-              path: "M0,25 L15,25 L25,5 L35,25 L50,25 L60,10 L70,25 L85,25 L100,20",
-              fillPath: "M0,30 L0,25 L15,25 L25,5 L35,25 L50,25 L60,10 L70,25 L85,25 L100,20 L100,30 Z"
+              id: "VIX", ticker: "^VIX", data: dashboardData?.marketPulse?.vix,
             },
           ].map((item, idx) => {
              const open = item.data?.price ? (item.data.price - item.data.change) : 0;
@@ -164,11 +183,8 @@ export default function Home() {
                 <div className="h-10 w-full animate-pulse bg-muted rounded-md" />
               )}
               {/* Sparkline */}
-              <div className="h-10 mt-4 -mx-1">
-                 <svg viewBox="0 0 100 30" className="w-full h-full preserve-aspect-ratio-none">
-                   <path d={item.fillPath} fill={item.data?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} opacity="0.15" />
-                   <path d={item.path} fill="none" stroke={item.data?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                 </svg>
+              <div className="h-12 mt-4 -mx-1 w-[calc(100%+8px)]">
+                 <MiniMarketChart ticker={item.ticker} color={item.data?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} />
               </div>
               {/* Footer OHL */}
               {item.data && (
