@@ -1,4 +1,5 @@
 "use client";
+import { TickerAutocomplete } from "@/components/ticker-autocomplete";
 import { Search, Plus, Loader2, BarChart2, CheckCircle2, TrendingUp, ShieldAlert, Award, AlertTriangle, XCircle, ArrowRight } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Input, Button, Badge, Skeleton } from "@/components/ui";
@@ -7,7 +8,7 @@ import { getTickerIconUrl } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 
 export default function ComparePage() {
-  const [tickers, setTickers] = useState<string[]>(["MSFT", "NVDA"]);
+  const [tickers, setTickers] = useState<string[]>(["", ""]);
   const [advancedData, setAdvancedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("Overview");
@@ -68,13 +69,21 @@ export default function ComparePage() {
         <div className="flex items-center gap-4">
           <div className="flex flex-row items-center gap-1 sm:gap-2 bg-card border border-border rounded-xl p-1.5 sm:p-2 flex-1">
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-2 sm:left-3 top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
-              <Input value={tickers[0]} onChange={(e) => setTickers([e.target.value.toUpperCase(), tickers[1]])} className="pl-7 sm:pl-9 border-none shadow-none bg-transparent h-10 w-full min-w-0 text-xs sm:text-sm" />
+              <TickerAutocomplete
+                value={tickers[0]}
+                onChange={(val: string) => setTickers([val, tickers[1]])}
+                placeholder="First Company (e.g. MSFT)"
+                errorClass="border-none shadow-none bg-transparent h-10 min-w-0 text-xs sm:text-sm pl-7 sm:pl-9 focus-visible:ring-0"
+              />
             </div>
-            <div className="w-px h-6 bg-border"></div>
+            <div className="w-px h-6 bg-border mx-1"></div>
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-2 sm:left-3 top-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
-              <Input value={tickers[1]} onChange={(e) => setTickers([tickers[0], e.target.value.toUpperCase()])} className="pl-7 sm:pl-9 border-none shadow-none bg-transparent h-10 w-full min-w-0 text-xs sm:text-sm" />
+              <TickerAutocomplete
+                value={tickers[1]}
+                onChange={(val: string) => setTickers([tickers[0], val])}
+                placeholder="Second Company (e.g. AAPL)"
+                errorClass="border-none shadow-none bg-transparent h-10 min-w-0 text-xs sm:text-sm pl-7 sm:pl-9 focus-visible:ring-0"
+              />
             </div>
             <Button onClick={handleCompare} disabled={loading} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-3 sm:px-8 h-10 shrink-0 text-xs sm:text-sm">
               {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : 'Compare'}

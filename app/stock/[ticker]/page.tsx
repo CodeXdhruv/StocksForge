@@ -3,7 +3,7 @@ import { useState, useEffect, use } from "react";
 import { ArrowLeft, Star, Share, MoreHorizontal, Sparkles, TrendingUp, AlertTriangle, Info, Clock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Badge } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { FinancialSnapshot } from "@/components/dashboard-widgets";
 import { AIAnalystChat } from "@/components/research-tools";
@@ -23,6 +23,53 @@ const safeParse = (str: any) => {
     return null;
   }
 };
+
+function WatchlistButton({ ticker }: { ticker: string }) {
+  const [loading, setLoading] = useState(false);
+  const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const { apiClient, getWatchlist } = useApi();
+  const { toast } = require("sonner");
+
+  useEffect(() => {
+    getWatchlist().then((res) => {
+      if (res?.data?.watchlist) {
+        const found = res.data.watchlist.some((item: any) => item.ticker === ticker);
+        setIsWatchlisted(found);
+      }
+    }).catch(console.error);
+  }, [ticker, getWatchlist]);
+
+  const toggleWatchlist = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.post('/watchlist', { ticker });
+      const added = res.data?.added;
+      setIsWatchlisted(added);
+      if (added) {
+        toast.success(`Added ${ticker} to Watchlist`);
+      } else {
+        toast.success(`Removed ${ticker} from Watchlist`);
+      }
+    } catch (e) {
+      toast.error('Failed to update watchlist');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button 
+      variant={isWatchlisted ? "default" : "outline"}
+      size="sm" 
+      onClick={toggleWatchlist} 
+      disabled={loading}
+      className="gap-2 h-8 transition-all"
+    >
+      <Star className={`w-3.5 h-3.5 ${isWatchlisted ? 'fill-current' : ''}`} /> 
+      {loading ? 'Updating...' : (isWatchlisted ? 'Watchlisted' : 'Add to Watchlist')}
+    </Button>
+  );
+}
 
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -179,6 +226,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" /> Last Updated: {lastUpdated}
           </div>
+          <WatchlistButton ticker={ticker} />
         </div>
       </div>
 
