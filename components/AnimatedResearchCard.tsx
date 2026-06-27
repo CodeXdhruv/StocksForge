@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { CheckCircle2, Loader2, Activity, Sparkles, Info } from "lucide-react";
+import { getTickerIconUrl } from "@/lib/utils";
 
 export function AnimatedResearchCard() {
   const [progress, setProgress] = useState(0);
@@ -72,8 +73,8 @@ export function AnimatedResearchCard() {
         <div className="w-full sm:w-48 flex flex-col gap-4 justify-between shrink-0">
           <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-black border border-white/10 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-[10px]">NVDA</span>
+              <div className="w-8 h-8 rounded-md flex items-center justify-center overflow-hidden">
+                <img src={getTickerIconUrl('NVDA')} alt="NVDA" className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="text-sm font-bold text-foreground">NVIDIA</div>

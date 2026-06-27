@@ -38,37 +38,45 @@ export function FinancialSnapshot({ data }: { data: TFinancialSnapshot }) {
 }
 
 export function MarketMood() {
+  const [data, setData] = useState<{ score: number; bullish: number; bearish: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { getMarketMood } = useApi();
+
+  useEffect(() => {
+    getMarketMood()
+      .then((res) => {
+        if (res?.data?.mood) {
+          setData(res.data.mood);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [getMarketMood]);
+
+  const isBullish = data ? data.bullish >= data.bearish : true;
+  const colorVar = isBullish ? 'var(--success)' : 'var(--destructive)';
+  const textColor = isBullish ? 'text-success' : 'text-destructive';
+  const pathData = isBullish 
+    ? "M0,20 L10,15 L20,25 L30,10 L40,15 L50,5 L60,15 L70,10 L80,5 L90,10 L100,0"
+    : "M0,10 L10,15 L20,5 L30,20 L40,15 L50,25 L60,15 L70,20 L80,25 L90,20 L100,30";
+
   return (
     <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-      <h3 className="font-semibold mb-6">Market Mood</h3>
+      <h3 className="font-semibold mb-6 text-center text-xl">Market Mood</h3>
       
-      <div className="space-y-8">
-        <div>
-          <div className="text-sm text-muted-foreground mb-1">Overall Market Sentiment</div>
-          <div className="flex justify-between items-start">
-            <div className="text-xl font-bold text-primary">Bullish</div>
-            <div className="w-16 h-16 relative flex items-center justify-center overflow-hidden">
-               {/* Simplified Bull representation */}
-               <TrendingUp className="w-12 h-12 text-foreground" />
+        <div className="flex-1 flex items-center justify-center pt-2">
+          {loading ? (
+            <Skeleton className="h-40 w-full rounded-xl" />
+          ) : (
+            <div className="w-full h-40 flex items-center justify-center">
+               {isBullish ? (
+                 <img src="/bull.webp" alt="Bullish" className="w-full h-full object-contain filter drop-shadow-md" />
+               ) : (
+                 <img src="/bear.png" alt="Bearish" className="w-full h-full object-contain filter drop-shadow-md scale-125" />
+               )}
             </div>
-          </div>
-          <div className="h-10 mt-2 w-full">
-            <svg viewBox="0 0 100 30" className="w-full h-full preserve-aspect-ratio-none">
-              <path d="M0,20 L10,15 L20,25 L30,10 L40,15 L50,5 L60,15 L70,10 L80,5 L90,10 L100,0" fill="none" stroke="var(--primary)" strokeWidth="2" />
-            </svg>
-          </div>
+          )}
         </div>
-
-        <div className="pt-6 border-t border-border flex items-center justify-between">
-          <div>
-            <div className="text-sm text-muted-foreground mb-1">Fear & Greed Index</div>
-            <div className="font-semibold text-primary">Greed</div>
-          </div>
-          <div className="transform scale-75 origin-right">
-            <ScoreGauge score={72} />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
