@@ -7,11 +7,8 @@ export function MiniMarketChart({ ticker, color }: { ticker: string; color: stri
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
-    // 1D time-series data
-    const period1 = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
-    
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001/api/v1';
-    fetch(`${BACKEND_URL}/company/${encodeURIComponent(ticker)}/chart?interval=5m&period1=${period1}`)
+    fetch(`${BACKEND_URL}/company/${encodeURIComponent(ticker)}/chart?interval=5m&range=1d`)
       .then(res => res.json())
       .then(res => {
         if (res.success && res.data && res.data.quotes) {
