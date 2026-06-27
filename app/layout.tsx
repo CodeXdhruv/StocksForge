@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, Puritan, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout-elements";
 import { PageTransition } from "@/components/layout-elements";
 import { Footer } from "@/components/layout-elements";
 
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-heading" });
+const puritan = Puritan({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-ui" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Quantix AI - AI-Powered Investment Research",
+  title: "StockForge - AI-Powered Investment Research",
   description: "Smarter research. Better investments.",
+  appleWebApp: {
+    title: "StockForge",
+    statusBarStyle: "default",
+    capable: true,
+  },
 };
 
 import { ClerkProvider } from '@clerk/nextjs'
@@ -28,8 +36,7 @@ export default function RootLayout({
       appearance={{
 
         variables: {
-          colorPrimary: '#A855F7',
-          colorBackground: '#0D0D12',
+          colorPrimary: '#09090B',
         },
         elements: {
           card: 'bg-card border border-border shadow-sm rounded-2xl',
@@ -43,14 +50,14 @@ export default function RootLayout({
       localization={{
         signIn: {
           start: {
-            title: 'Quantix AI',
+            title: 'StockForge',
             subtitle: 'Welcome back! Please enter your details.',
           }
         }
       }}
     >
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning>
+        <body className={`${spaceGrotesk.variable} ${puritan.variable} ${jetbrainsMono.variable} ${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <Navbar />
             <main className="flex-1 flex flex-col">
