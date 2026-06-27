@@ -10,7 +10,7 @@ import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from "ne
 import { UserButton, SignInButton, SignUpButton, useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 
 
@@ -21,8 +21,21 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const links = ['Research', 'Watchlist', 'Compare', 'Insights', 'Alerts'];
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     setMounted(true);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // CMD+K on Mac, Ctrl+K or Win+K on Windows/Linux
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
@@ -30,10 +43,11 @@ export function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">Q</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img src="/logo-light.png" alt="StockForge Logo" className="w-8 h-8 dark:hidden object-contain" />
+              <img src="/logo-dark.png" alt="StockForge Logo" className="hidden dark:block w-8 h-8 object-contain" />
             </div>
-            <span className="font-bold text-xl tracking-tight">Quantix AI</span>
+            <span className="font-bold text-xl tracking-tight">StockForge</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-1">
@@ -77,6 +91,7 @@ export function Navbar() {
           >
             <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
             <Input 
+              ref={searchInputRef}
               name="search"
               placeholder="Search company or ticker..." 
               className="w-[280px] pl-9 bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary rounded-lg h-9"
