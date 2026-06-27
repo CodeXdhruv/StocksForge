@@ -8,6 +8,8 @@ import {
   TrendingUp, TrendingDown, Activity, BarChart3, Newspaper, Building2, 
   Calendar, Globe, Flame, Bitcoin, Landmark, Search, RefreshCw, AlertCircle, ExternalLink
 } from 'lucide-react';
+import { useApi } from "@/hooks/useApi";
+import { getTickerIconUrl } from "@/lib/utils";
 import { 
   ResponsiveContainer, AreaChart, LineChart, Area, Line, YAxis 
 } from 'recharts';
@@ -282,7 +284,10 @@ function TopMovers({ data }: { data: any }) {
                 {list && list.length > 0 ? list.map((mover: any, i: number) => (
                   <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="flex items-center justify-between p-2 hover:bg-muted/40 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 border border-border shadow-sm"><AvatarFallback className="text-xs font-bold bg-foreground text-background">{mover.symbol.substring(0,2)}</AvatarFallback></Avatar>
+                      <Avatar className="w-8 h-8 border border-border shadow-sm">
+                        <AvatarImage src={getTickerIconUrl(mover.symbol)} alt={mover.symbol} />
+                        <AvatarFallback className="text-xs font-bold bg-foreground text-background">{mover.symbol.substring(0,2)}</AvatarFallback>
+                      </Avatar>
                       <div>
                         <div className="font-bold text-sm">{mover.symbol}</div>
                         <div className="text-xs text-muted-foreground truncate w-24 sm:w-32">{mover.company}</div>
@@ -383,7 +388,10 @@ function UpcomingEarnings({ data }: { data: any }) {
                       <span className="text-sm font-bold leading-none">{date.getDate()}</span>
                     </div>
                     <div>
-                      <div className="font-bold text-sm">{earn.ticker}</div>
+                      <div className="flex items-center gap-1.5">
+                        <img src={getTickerIconUrl(earn.ticker)} alt="" className="w-3.5 h-3.5 rounded-sm bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        <div className="font-bold text-sm">{earn.ticker}</div>
+                      </div>
                       <div className="text-[10px] text-muted-foreground flex gap-2">
                         <span>EPS Est: {earn.expectedEPS ? `$${earn.expectedEPS}` : 'N/A'}</span>
                       </div>
@@ -574,7 +582,34 @@ function InsightsDashboard() {
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
               <Skeleton className="h-32 w-full rounded-2xl" />
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)}
+                <div className="flex flex-col gap-6">
+                  <Skeleton className="h-[465px] rounded-2xl" />
+                  <Skeleton className="h-[300px] rounded-2xl" />
+                </div>
+                
+                <div className="flex flex-col gap-6">
+                  <Skeleton className="h-[250px] rounded-2xl" />
+                  <Skeleton className="h-[300px] rounded-2xl" />
+                  <Skeleton className="h-[200px] rounded-2xl" />
+                </div>
+                
+                <div className="flex flex-col gap-6">
+                  <Skeleton className="h-[400px] rounded-2xl" />
+                  <Skeleton className="h-[150px] rounded-2xl" />
+                </div>
+
+                <div className="flex flex-col gap-6 xl:col-span-1">
+                  <Skeleton className="h-[350px] rounded-2xl" />
+                </div>
+
+                <div className="flex flex-col gap-6 xl:col-span-1">
+                  <Skeleton className="h-[300px] rounded-2xl" />
+                </div>
+
+                <div className="flex flex-col gap-6 xl:col-span-1">
+                  <Skeleton className="h-[300px] rounded-2xl" />
+                  <Skeleton className="h-[250px] rounded-2xl" />
+                </div>
               </div>
             </motion.div>
           ) : (

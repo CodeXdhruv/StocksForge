@@ -11,6 +11,8 @@ import { MarketMood } from "@/components/dashboard-widgets";
 import { WatchlistPanel } from "@/components/dashboard-widgets";
 import { Progress } from "@/components/ui";
 import { useApi } from "@/hooks/useApi";
+import { getTickerIconUrl } from "@/lib/utils";
+import { StockChart } from "@/components/stock-chart";
 
 const safeParse = (str: any) => {
   if (!str) return null;
@@ -155,18 +157,19 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           <Link href="/" className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shadow-sm">
-              <span className="text-primary font-bold text-lg">{ticker.substring(0, 2)}</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-card border border-border shadow-sm">
+              <img src={getTickerIconUrl(ticker)} alt={`${ticker} logo`} className="w-10 h-10 rounded-lg bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{data.name}</h1>
+            <div className="flex flex-col justify-center">
+              <div className="flex items-baseline gap-2.5">
+                <h1 className="text-2xl font-bold tracking-tight">{data.name}</h1>
+                <span className="text-lg font-semibold text-muted-foreground">{ticker}</span>
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-medium">{ticker}</span>
-                <span className="text-xs text-muted-foreground">• {data.exchange || 'NYSE'}</span>
-                <Badge variant="secondary" className="ml-2 font-normal text-xs">{data.industry || 'Technology'}</Badge>
+                <span className="text-xs font-medium text-muted-foreground">{data.exchange || 'NYSE'}</span>
+                <span className="text-xs text-muted-foreground/50">•</span>
+                <Badge variant="secondary" className="font-medium text-[10px] px-2 py-0 h-4 bg-muted/50">{data.industry || 'Technology'}</Badge>
               </div>
             </div>
           </div>
@@ -176,9 +179,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" /> Last Updated: {lastUpdated}
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-             <span className="font-semibold">Sources:</span> Yahoo Finance (Market), SEC (Filings), Finnhub (Estimates), StockTwits (Sentiment)
-          </div>
         </div>
       </div>
 
@@ -186,7 +186,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         {/* Main Content */}
         <div className="flex-1 space-y-8">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 space-x-6 overflow-x-auto">
+            <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 space-x-6 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {['Overview', 'Financials', 'News & Sentiment', 'Valuation', 'Risks', 'Outlook', 'AI Debate'].map((tab) => (
                 <TabsTrigger 
                   key={tab} 
@@ -199,64 +199,77 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             </TabsList>
 
             <TabsContent value="overview" className="mt-8 space-y-8">
-              {/* 5 Metric Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-                  <div className="text-sm text-muted-foreground">Current Price</div>
-                  <div>
-                    <div className="text-2xl font-bold font-mono">${typeof data.price === 'number' ? data.price.toFixed(2) : data.price}</div>
-                    <div className={`text-sm font-semibold ${data.trend === 'up' ? 'text-success' : 'text-destructive'}`}>
-                       {data.trend === 'up' ? '+' : ''}{typeof data.change === 'number' ? data.change.toFixed(2) : data.change} ({typeof data.changePercent === 'number' ? data.changePercent.toFixed(2) : data.changePercent}%)
-                    </div>
-                  </div>
-                </div>
+              {/* Chart & Metric Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-                  <div className="text-sm text-muted-foreground">12-Month Analyst Target</div>
-                  <div>
-                    <div className="text-2xl font-bold font-mono">${typeof data.priceTarget === 'number' ? data.priceTarget.toFixed(2) : data.priceTarget}</div>
-                    {targetUpside ? (
-                      <div className={targetUpside.isPositive ? "text-success text-sm font-semibold" : "text-destructive text-sm font-semibold"}>
-                        {targetUpside.isPositive ? '+' : ''}{targetUpside.value}% Upside
-                      </div>
-                    ) : <div className="text-success text-sm font-semibold">--</div>}
+                {/* Intraday Chart */}
+                <div className="lg:col-span-2 flex flex-col h-full min-h-[500px]">
+                  <div className="flex-1 w-full relative h-full">
+                    <div className="absolute inset-0">
+                       <StockChart ticker={ticker} currentPrice={data.price} change={data.change} changePercent={data.changePercent} volume={data.volume} />
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-                  <div className="text-sm text-muted-foreground flex items-center gap-1">Intrinsic Fair Value <Info className="w-3 h-3" /></div>
-                  <div>
-                    <div className="text-2xl font-bold font-mono">${typeof data.fairValue === 'number' ? data.fairValue.toFixed(2) : data.fairValue}</div>
-                    {fairValueUpside ? (
-                      <div className={fairValueUpside.isPositive ? "text-success text-sm font-semibold" : "text-destructive text-sm font-semibold"}>
-                        {fairValueUpside.isPositive ? '+' : ''}{fairValueUpside.value}% Upside
+                {/* 5 Metric Cards */}
+                <div className="lg:col-span-1 flex flex-col justify-between gap-4 h-full">
+                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
+                    <div className="text-sm text-muted-foreground mb-1">Current Price</div>
+                    <div>
+                      <div className="text-xl font-bold font-mono">${typeof data.price === 'number' ? data.price.toFixed(2) : data.price}</div>
+                      <div className={`text-xs font-semibold ${data.trend === 'up' ? 'text-success' : 'text-destructive'}`}>
+                         {data.trend === 'up' ? '+' : ''}{typeof data.change === 'number' ? data.change.toFixed(2) : data.change} ({typeof data.changePercent === 'number' ? data.changePercent.toFixed(2) : data.changePercent}%)
                       </div>
-                    ) : <div className="text-success text-sm font-semibold">--</div>}
+                    </div>
                   </div>
-                </div>
+                  
+                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
+                    <div className="text-sm text-muted-foreground mb-1">12-Month Analyst Target</div>
+                    <div>
+                      <div className="text-xl font-bold font-mono">${typeof data.priceTarget === 'number' ? data.priceTarget.toFixed(2) : data.priceTarget}</div>
+                      {targetUpside ? (
+                        <div className={targetUpside.isPositive ? "text-success text-xs font-semibold" : "text-destructive text-xs font-semibold"}>
+                          {targetUpside.isPositive ? '+' : ''}{targetUpside.value}% Upside
+                        </div>
+                      ) : <div className="text-success text-xs font-semibold">--</div>}
+                    </div>
+                  </div>
 
-                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-                  <div className="text-sm text-muted-foreground">AI Recommendation</div>
-                  <div>
-                    <div className={`text-2xl font-bold ${data.aiRecommendation?.includes('BUY') ? 'text-success' : data.aiRecommendation?.includes('SELL') ? 'text-destructive' : 'text-primary'}`}>
-                      {data.aiRecommendation}
-                    </div>
-                    <div className="text-muted-foreground text-xs font-medium mt-1 leading-tight line-clamp-2">
-                       {displaySummary.split('.')[0]}.
+                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
+                    <div className="text-sm text-muted-foreground flex items-center gap-1 mb-1">Intrinsic Fair Value <Info className="w-3 h-3" /></div>
+                    <div>
+                      <div className="text-xl font-bold font-mono">${typeof data.fairValue === 'number' ? data.fairValue.toFixed(2) : data.fairValue}</div>
+                      {fairValueUpside ? (
+                        <div className={fairValueUpside.isPositive ? "text-success text-xs font-semibold" : "text-destructive text-xs font-semibold"}>
+                          {fairValueUpside.isPositive ? '+' : ''}{fairValueUpside.value}% Upside
+                        </div>
+                      ) : <div className="text-success text-xs font-semibold">--</div>}
                     </div>
                   </div>
-                </div>
-                
-                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36 relative group">
-                  <div className="text-sm text-muted-foreground flex items-center justify-between">AI Confidence <Info className="w-3 h-3 text-muted-foreground" /></div>
-                  <div className="absolute top-0 left-0 w-full h-full bg-card border border-border rounded-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex flex-col justify-center text-xs text-muted-foreground shadow-lg pointer-events-none">
-                     Based on data completeness, model agreement, and historical prediction accuracy.
+
+                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
+                    <div className="text-sm text-muted-foreground mb-1">AI Recommendation</div>
+                    <div>
+                      <div className={`text-xl font-bold ${data.aiRecommendation?.includes('BUY') ? 'text-success' : data.aiRecommendation?.includes('SELL') ? 'text-destructive' : 'text-primary'}`}>
+                        {data.aiRecommendation}
+                      </div>
+                      <div className="text-muted-foreground text-[10px] font-medium mt-1 leading-tight line-clamp-2">
+                         {displaySummary.split('.')[0]}.
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold mb-2">{(data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}</div>
-                    <div className="flex items-center gap-2">
-                       <Progress value={data.confidence || 0} className="h-1.5 flex-1 bg-muted [&>div]:bg-primary" />
-                       <span className="text-sm font-mono font-semibold">{data.confidence || 0}%</span>
+                  
+                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1 relative group">
+                    <div className="text-sm text-muted-foreground flex items-center justify-between mb-1">AI Confidence <Info className="w-3 h-3 text-muted-foreground" /></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-card border border-border rounded-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex flex-col justify-center text-[10px] text-muted-foreground shadow-lg pointer-events-none">
+                       Based on data completeness, model agreement, and historical prediction accuracy.
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold mb-1">{(data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}</div>
+                      <div className="flex items-center gap-2">
+                         <Progress value={data.confidence || 0} className="h-1 flex-1 bg-muted [&>div]:bg-primary" />
+                         <span className="text-xs font-mono font-semibold">{data.confidence || 0}%</span>
+                      </div>
                     </div>
                   </div>
                 </div>

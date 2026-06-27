@@ -1,8 +1,9 @@
 "use client";
 import { Search, Plus, Loader2, BarChart2, CheckCircle2, TrendingUp, ShieldAlert, Award, AlertTriangle, XCircle, ArrowRight } from "lucide-react";
 import { useState, useMemo } from "react";
-import { Input, Button, Badge } from "@/components/ui";
+import { Input, Button, Badge, Skeleton } from "@/components/ui";
 import { useApi } from "@/hooks/useApi";
+import { getTickerIconUrl } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 
 export default function ComparePage() {
@@ -83,9 +84,29 @@ export default function ComparePage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col justify-center items-center py-20 gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-muted-foreground text-sm animate-pulse">Running live market data analysis...</p>
+        <div className="space-y-6">
+          <Skeleton className="h-14 w-full rounded-lg" />
+          
+          <Skeleton className="h-[250px] w-full rounded-2xl" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-[200px] w-full rounded-2xl" />
+            <Skeleton className="h-[200px] w-full rounded-2xl" />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Skeleton className="h-[400px] w-full rounded-2xl col-span-1" />
+            <Skeleton className="h-[400px] w-full rounded-2xl col-span-2" />
+          </div>
+          
+          <Skeleton className="h-[300px] w-full rounded-2xl" />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-[350px] w-full rounded-2xl" />
+            <Skeleton className="h-[350px] w-full rounded-2xl" />
+          </div>
+          
+          <Skeleton className="h-24 w-full rounded-xl" />
         </div>
       )}
 
@@ -149,7 +170,10 @@ export default function ComparePage() {
                 <div className="flex-1">
                   <div className="text-primary font-bold text-xs uppercase tracking-wider mb-2">Overall Comparison</div>
                   <h3 className="text-lg text-muted-foreground mb-1">Winner</h3>
-                  <h2 className="text-4xl font-bold text-white mb-2">{aiWinner?.ticker}</h2>
+                  <div className="flex items-center gap-4 mb-2">
+                    <img src={getTickerIconUrl(aiWinner?.ticker || "")} alt="" className="w-10 h-10 rounded-md bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <h2 className="text-4xl font-bold text-white mb-0">{aiWinner?.ticker}</h2>
+                  </div>
                   <div className="flex flex-wrap items-center gap-4 mt-4 text-xs font-semibold">
                     <span className="text-muted-foreground bg-background/50 px-3 py-1.5 rounded-md border border-border">Confidence: {aiWinner?.confidence}%</span>
                     <span className="text-muted-foreground bg-background/50 px-3 py-1.5 rounded-md border border-border">Data Completeness: {aiWinner?.dataCompleteness}%</span>
@@ -162,11 +186,17 @@ export default function ComparePage() {
                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Overall Score</div>
                      
                      <div className="flex items-center justify-between gap-6 bg-background/50 p-3 rounded-lg border border-border min-w-[140px]">
-                        <span className="font-bold text-sm">{t1}</span>
+                        <div className="flex items-center gap-2">
+                           <img src={getTickerIconUrl(t1)} alt="" className="w-4 h-4 rounded-sm bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                           <span className="font-bold text-sm">{t1}</span>
+                        </div>
                         <span className="text-2xl font-bold font-mono text-[#8884d8]">{t1Overall}</span>
                      </div>
                      <div className="flex items-center justify-between gap-6 bg-background/50 p-3 rounded-lg border border-border min-w-[140px]">
-                        <span className="font-bold text-sm">{t2}</span>
+                        <div className="flex items-center gap-2">
+                           <img src={getTickerIconUrl(t2)} alt="" className="w-4 h-4 rounded-sm bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                           <span className="font-bold text-sm">{t2}</span>
+                        </div>
                         <span className="text-2xl font-bold font-mono text-success">{t2Overall}</span>
                      </div>
                    </div>
@@ -190,7 +220,10 @@ export default function ComparePage() {
           {/* Why They Win (Pros Comparison) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-card border border-border rounded-2xl p-6">
-               <h3 className="text-lg font-bold mb-4">{t1} wins</h3>
+               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                 <img src={getTickerIconUrl(t1)} alt="" className="w-5 h-5 rounded-sm bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                 {t1} wins
+               </h3>
                <ul className="space-y-4">
                  {prosCons[t1]?.pros?.map((p: string, i: number) => (
                    <li key={i} className="flex items-start gap-3">
@@ -201,7 +234,10 @@ export default function ComparePage() {
                </ul>
             </div>
             <div className="bg-card border border-border rounded-2xl p-6">
-               <h3 className="text-lg font-bold mb-4">{t2} wins</h3>
+               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                 <img src={getTickerIconUrl(t2)} alt="" className="w-5 h-5 rounded-sm bg-white" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                 {t2} wins
+               </h3>
                <ul className="space-y-4">
                  {prosCons[t2]?.pros?.map((p: string, i: number) => (
                    <li key={i} className="flex items-start gap-3">
