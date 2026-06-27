@@ -708,7 +708,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                                <div key={key} className="text-sm">
                                  <span className="font-semibold text-muted-foreground capitalize mr-2">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
                                  <div className="font-medium inline-block align-top">
-                                   {Array.isArray(val) ? val.join(', ') : typeof val === 'object' ? (
+                                   {Array.isArray(val) ? val.join(', ') : (val !== null && typeof val === 'object') ? (
                                      <div className="mt-1 space-y-1 pl-3 border-l-2 border-primary/20">
                                        {Object.entries(val).map(([subKey, subVal]) => (
                                          <div key={subKey} className="text-xs">
