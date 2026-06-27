@@ -178,10 +178,10 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center">
-              <img src="/logo-light.png" alt="StockForge Logo" className="w-8 h-8 dark:hidden object-contain" />
-              <img src="/logo-dark.png" alt="StockForge Logo" className="hidden dark:block w-8 h-8 object-contain" />
+              <img src="/logo-light.png" alt="StocksForge Logo" className="w-8 h-8 dark:hidden object-contain" />
+              <img src="/logo-dark.png" alt="StocksForge Logo" className="hidden dark:block w-8 h-8 object-contain" />
             </div>
-            <span className="font-bold text-xl tracking-tight hidden sm:block">StockForge</span>
+            <span className="font-bold text-xl tracking-tight hidden sm:block">StocksForge</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">

@@ -11,10 +11,53 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "StockForge - AI-Powered Investment Research",
-  description: "Smarter research. Better investments.",
+  metadataBase: new URL('https://stocksforge.vercel.app'),
+  title: {
+    default: "StocksForge - Institutional Research Terminal",
+    template: "%s | StocksForge",
+  },
+  description: "StocksForge is an institutional-grade equity analytics and financial research terminal. Access real-time market data, AI-driven insights, and advanced stock screening.",
+  keywords: [
+    "StocksForge", "StockForge", "stock screener", "investment research", 
+    "financial terminal", "equity analytics", "market intelligence", 
+    "real-time stock data", "institutional trading platform", 
+    "stock analysis software", "portfolio tracker", "AI stock insights"
+  ],
+  authors: [{ name: "StocksForge Team" }],
+  creator: "StocksForge",
+  publisher: "StocksForge",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "StocksForge - Institutional Research Terminal",
+    description: "Smarter research. Better investments. Experience the next generation of equity analytics.",
+    url: "https://stocksforge.vercel.app",
+    siteName: "StocksForge",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StocksForge - Institutional Research Terminal",
+    description: "Smarter research. Better investments. Experience the next generation of equity analytics.",
+    creator: "@StocksForge",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   appleWebApp: {
-    title: "StockForge",
+    title: "StocksForge",
     statusBarStyle: "default",
     capable: true,
   },
@@ -50,7 +93,7 @@ export default function RootLayout({
       localization={{
         signIn: {
           start: {
-            title: 'StockForge',
+            title: 'StocksForge',
             subtitle: 'Welcome back! Please enter your details.',
           }
         }
