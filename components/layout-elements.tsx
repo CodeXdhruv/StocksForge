@@ -24,7 +24,7 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const links = ['Home', 'Watchlist', 'Compare', 'Insights'];
-  const { getDashboardData, getWatchlist } = useApi();
+  const { getMarketOverview, getWatchlist } = useApi();
   const [alerts, setAlerts] = useState<any[]>([]);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -54,8 +54,8 @@ export function Navbar() {
         
         // 1. Market Mood Alert & 2. Daily Movers Digest
         try {
-          const response = await getDashboardData();
-          const dash = response?.data;
+          const response = await getMarketOverview();
+          const dash = response?.data?.dashboard;
 
           if (dash?.fearGreed?.value < 40) {
             newAlerts.push({

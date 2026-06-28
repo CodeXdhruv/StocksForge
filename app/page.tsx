@@ -16,7 +16,7 @@ export default function Home() {
   const [popularTickers, setPopularTickers] = useState<string[]>(["NVDA", "AAPL", "MSFT", "AMZN", "TSLA"]);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const { getTrendingStocks, getDashboardData, getMarketMood } = useApi();
+  const { getMarketOverview } = useApi();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [moodData, setMoodData] = useState<any>(null);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
@@ -45,33 +45,25 @@ export default function Home() {
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 60000);
     
-    getTrendingStocks()
-      .then((res) => {
-        if (res?.data?.trending && res.data.trending.length > 0) {
-          const filtered = res.data.trending.filter((ticker: string) => {
-            return !ticker.includes("-USD") && !ticker.startsWith("^");
-          });
-          const merged = Array.from(new Set([...filtered, "NVDA", "AAPL", "MSFT", "AMZN", "TSLA"])).slice(0, 5);
-          setPopularTickers(merged);
-        }
-      })
-      .catch((err) => console.error("Failed to load trending stocks", err));
-      
-    getDashboardData('Overview')
+    getMarketOverview('Overview')
       .then((res) => {
         if (res?.data) {
-          setDashboardData(res.data);
+          if (res.data.trending && res.data.trending.length > 0) {
+            const filtered = res.data.trending.filter((ticker: string) => {
+              return !ticker.includes("-USD") && !ticker.startsWith("^");
+            });
+            const merged = Array.from(new Set([...filtered, "NVDA", "AAPL", "MSFT", "AMZN", "TSLA"])).slice(0, 5);
+            setPopularTickers(merged);
+          }
+          if (res.data.dashboard) {
+            setDashboardData(res.data.dashboard);
+          }
+          if (res.data.mood) {
+            setMoodData(res.data.mood);
+          }
         }
       })
-      .catch((err) => console.error("Failed to load dashboard data", err));
-      
-    getMarketMood()
-      .then((res) => {
-        if (res?.data?.mood) {
-          setMoodData(res.data.mood);
-        }
-      })
-      .catch((err) => console.error("Failed to load market mood data", err));
+      .catch((err) => console.error("Failed to load market overview", err));
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {

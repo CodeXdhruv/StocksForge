@@ -1,11 +1,11 @@
 import { useAuth } from '@clerk/nextjs';
 import axios from 'axios';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001/api/v1';
 
 export function useApi() {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
 
   const apiClient = useMemo(() => {
     const client = axios.create({
@@ -30,50 +30,41 @@ export function useApi() {
     return client;
   }, [getToken]);
 
-  const getWatchlist = async () => {
+  const getWatchlist = useCallback(async () => {
+    if (!isSignedIn) return { success: true, data: { watchlist: [] } };
     const { data } = await apiClient.get('/watchlist');
     return data;
-  };
+  }, [apiClient, isSignedIn]);
 
-  const getStockData = async (ticker: string) => {
+  const getStockData = useCallback(async (ticker: string) => {
     const { data } = await apiClient.get(`/company/${ticker}`);
     return data;
-  };
+  }, [apiClient]);
 
-  const getResearchProgress = async (ticker: string) => {
+  const getResearchProgress = useCallback(async (ticker: string) => {
     const { data } = await apiClient.get(`/research/${ticker}/progress`);
     return data;
-  };
+  }, [apiClient]);
 
-  const getMarketMood = async () => {
-    const { data } = await apiClient.get('/market/mood');
-    return data;
-  };
-
-  const getTrendingStocks = async () => {
-    const { data } = await apiClient.get('/market/trending');
-    return data;
-  };
-
-  const getCompareStocks = async (tickers: string[]) => {
+  const getCompareStocks = useCallback(async (tickers: string[]) => {
     const { data } = await apiClient.get(`/compare?tickers=${tickers.join(',')}`);
     return data;
-  };
+  }, [apiClient]);
 
-  const sendChatMessage = async (ticker: string, message: string) => {
+  const sendChatMessage = useCallback(async (ticker: string, message: string) => {
     const { data } = await apiClient.post(`/chat`, { ticker, message });
     return data;
-  };
+  }, [apiClient]);
 
-  const startResearch = async (ticker: string, onProgress?: (data: any) => void) => {
+  const startResearch = useCallback(async (ticker: string, onProgress?: (data: any) => void) => {
     const token = await getToken();
-    const res = await fetch(`${BACKEND_URL}/research/start/stream`, {
+    const res = await fetch(`${BACKEND_URL}/research/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({ ticker })
+      body: JSON.stringify({ ticker, stream: true })
     });
     
     if (!res.body) throw new Error("No readable stream");
@@ -109,29 +100,27 @@ export function useApi() {
     }
     
     return { data: finalData };
-  };
+  }, [getToken]);
 
-  const getDashboardData = async (category: string = 'Overview') => {
-    const { data } = await apiClient.get(`/market/dashboard?category=${category}`);
+  const getMarketOverview = useCallback(async (category: string = 'Overview') => {
+    const { data } = await apiClient.get(`/market/overview?category=${category}`);
     return data;
-  };
+  }, [apiClient]);
 
-  const getAdvancedCompare = async (t1: string, t2: string) => {
-    const { data } = await apiClient.get(`/compare/advanced?t1=${t1}&t2=${t2}`);
+  const getAdvancedCompare = useCallback(async (t1: string, t2: string) => {
+    const { data } = await apiClient.get(`/compare?tickers=${t1},${t2}&mode=advanced`);
     return data;
-  };
+  }, [apiClient]);
 
   return {
     apiClient,
     getWatchlist,
     getStockData,
     getResearchProgress,
-    getMarketMood,
-    getTrendingStocks,
     getCompareStocks,
     getAdvancedCompare,
     sendChatMessage,
     startResearch,
-    getDashboardData,
+    getMarketOverview,
   };
 }

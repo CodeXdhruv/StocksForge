@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription, Tabs, TabsContent, TabsList, TabsTrigger, Badge, Button, Input, Separator, Skeleton } from '@/components/ui';
+import { AuthGate } from '@/components/auth-gate';
 
 const ScrollArea = ({ children, className }: { children: React.ReactNode, className?: string }) => (
   <div className={`overflow-auto ${className}`}>{children}</div>
@@ -626,36 +627,38 @@ function InsightsDashboard() {
               </div>
 
               {/* Grid Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <div className="flex flex-col gap-6">
-                  <MarketNews data={data?.marketNews} />
-                  <SocialBuzz data={data?.socialBuzz} />
-                </div>
-                
-                <div className="flex flex-col gap-6">
-                  <TopSectors data={data?.topSectors} />
-                  <SectorHeatmap data={data?.sectorHeatmap} />
-                  <TrendingStocks data={data?.trendingStocks} />
-                </div>
-                
-                <div className="flex flex-col gap-6">
-                  <TopMovers data={data?.topMovers} />
-                  <MarketStatistics data={data?.marketStatistics} />
-                </div>
+              <AuthGate message="Sign in to access deep market analysis, sentiment tracking, and predictive sector heatmaps.">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="flex flex-col gap-6">
+                    <MarketNews data={data?.marketNews} />
+                    <SocialBuzz data={data?.socialBuzz} />
+                  </div>
+                  
+                  <div className="flex flex-col gap-6">
+                    <TopSectors data={data?.topSectors} />
+                    <SectorHeatmap data={data?.sectorHeatmap} />
+                    <TrendingStocks data={data?.trendingStocks} />
+                  </div>
+                  
+                  <div className="flex flex-col gap-6">
+                    <TopMovers data={data?.topMovers} />
+                    <MarketStatistics data={data?.marketStatistics} />
+                  </div>
 
-                <div className="flex flex-col gap-6 xl:col-span-1">
-                  <ETFPerformance data={data?.etfPerformance} />
-                </div>
+                  <div className="flex flex-col gap-6 xl:col-span-1">
+                    <ETFPerformance data={data?.etfPerformance} />
+                  </div>
 
-                <div className="flex flex-col gap-6 xl:col-span-1">
-                  <UpcomingEarnings data={data?.upcomingEarnings} />
-                </div>
+                  <div className="flex flex-col gap-6 xl:col-span-1">
+                    <UpcomingEarnings data={data?.upcomingEarnings} />
+                  </div>
 
-                <div className="flex flex-col gap-6 xl:col-span-1">
-                  <EconomicCalendar data={data?.economicCalendar} />
-                  <IPOCalendar data={data?.ipoCalendar} />
+                  <div className="flex flex-col gap-6 xl:col-span-1">
+                    <EconomicCalendar data={data?.economicCalendar} />
+                    <IPOCalendar data={data?.ipoCalendar} />
+                  </div>
                 </div>
-              </div>
+              </AuthGate>
             </motion.div>
           )}
         </AnimatePresence>

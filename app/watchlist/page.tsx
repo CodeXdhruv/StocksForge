@@ -8,6 +8,7 @@ import { getTickerIconUrl } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useApi } from "@/hooks/useApi";
+import { AuthGate } from "@/components/auth-gate";
 
 function WatchlistContent() {
   const queryClient = useQueryClient();
@@ -43,8 +44,40 @@ function WatchlistContent() {
       const { data } = await apiClient.post('/watchlist', { ticker });
       return data;
     },
+    onMutate: async (ticker) => {
+      await queryClient.cancelQueries({ queryKey: ['watchlist'] });
+      const previousWatchlist = queryClient.getQueryData(['watchlist']);
+      
+      queryClient.setQueryData(['watchlist'], (old: any) => {
+        if (!old?.data?.watchlist) return old;
+        const list = old.data.watchlist;
+        const exists = list.some((i: any) => i.ticker === ticker);
+        
+        if (exists) {
+          return { ...old, data: { ...old.data, watchlist: list.filter((i: any) => i.ticker !== ticker) } };
+        } else {
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              watchlist: [
+                { id: ticker, ticker, name: ticker, price: 0, today: 0, ytd: 0, oneYear: 0, verdict: 'Hold', reasoning: 'Fetching market data...', mcap: 'N/A', added: 'Just now' },
+                ...list
+              ]
+            }
+          };
+        }
+      });
+      
+      return { previousWatchlist };
+    },
+    onError: (err, ticker, context) => {
+      if (context?.previousWatchlist) {
+        queryClient.setQueryData(['watchlist'], context.previousWatchlist);
+      }
+      toast.error(`Failed to update ${ticker}`);
+    },
     onSuccess: (data, ticker) => {
-      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
       if (data?.added) {
         toast.success(`Added ${ticker.toUpperCase()} to watchlist`);
       } else {
@@ -52,6 +85,9 @@ function WatchlistContent() {
       }
       setNewTicker("");
       setIsSearchVisible(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
     }
   });
 
@@ -155,7 +191,7 @@ function WatchlistContent() {
            <Skeleton className="h-[400px] w-full" />
         </div>
       ) : (
-        <>
+        <AuthGate message="Sign in to build and track your personal portfolio watchlist.">
           {/* Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
             <Card className="shadow-sm border-border col-span-2 lg:col-span-1">
@@ -326,7 +362,7 @@ function WatchlistContent() {
               </table>
             </div>
           </div>
-        </>
+        </AuthGate>
       )}
     </div>
   );

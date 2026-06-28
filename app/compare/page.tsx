@@ -4,6 +4,7 @@ import { Search, Plus, Loader2, BarChart2, CheckCircle2, TrendingUp, ShieldAlert
 import { useState, useMemo } from "react";
 import { Input, Button, Badge, Skeleton } from "@/components/ui";
 import { useApi } from "@/hooks/useApi";
+import { AuthGate } from "@/components/auth-gate";
 import { getTickerIconUrl } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 
@@ -58,10 +59,11 @@ export default function ComparePage() {
   const getPeers = (ticker: string) => peerMap[ticker] || ['MSFT', 'AAPL', 'GOOGL', 'AMZN'];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-[1400px]">
-      {/* Header & Search */}
-      <div className="flex flex-col gap-6 mb-8">
-        <div className="text-center md:text-left">
+    <AuthGate message="Sign in to unlock AI-powered stock comparisons and deep institutional models.">
+      <div className="container mx-auto px-4 py-8 max-w-[1400px]">
+        {/* Header & Search */}
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="text-center md:text-left">
           <h1 className="text-3xl font-bold mb-2">Compare Stocks</h1>
           <p className="text-muted-foreground">Transparent, evidence-based comparison.</p>
         </div>
@@ -414,6 +416,7 @@ export default function ComparePage() {
 
         </>
       )}
-    </div>
+      </div>
+    </AuthGate>
   );
 }

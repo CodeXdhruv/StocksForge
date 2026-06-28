@@ -41,10 +41,10 @@ export function FinancialSnapshot({ data }: { data: TFinancialSnapshot }) {
 export function MarketMood() {
   const [data, setData] = useState<{ score: number; bullish: number; bearish: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { getMarketMood } = useApi();
+  const { getMarketOverview } = useApi();
 
   useEffect(() => {
-    getMarketMood()
+    getMarketOverview()
       .then((res) => {
         if (res?.data?.mood) {
           setData(res.data.mood);
@@ -52,7 +52,7 @@ export function MarketMood() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [getMarketMood]);
+  }, [getMarketOverview]);
 
   const isBullish = data ? data.bullish >= data.bearish : true;
   const colorVar = isBullish ? 'var(--success)' : 'var(--destructive)';

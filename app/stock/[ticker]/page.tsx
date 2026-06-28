@@ -13,6 +13,8 @@ import { Progress } from "@/components/ui";
 import { useApi } from "@/hooks/useApi";
 import { getTickerIconUrl } from "@/lib/utils";
 import { StockChart } from "@/components/stock-chart";
+import { useAuth } from "@clerk/nextjs";
+import { AuthGate } from "@/components/auth-gate";
 
 const safeParse = (str: any) => {
   if (!str) return null;
@@ -78,6 +80,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const [isResearching, setIsResearching] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const { getStockData, startResearch } = useApi();
+  const { isSignedIn } = useAuth();
   
   const unwrappedParams = use(params);
   const ticker = unwrappedParams.ticker.toUpperCase();
@@ -142,29 +145,32 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             } : baseData.financials,
             companyNews: res.data.news || [],
           });
-          
-          startResearch(ticker, (progressData) => {
-            if (progressData.type === 'agent') {
-              setStockData((prev: any) => ({
-                ...prev,
-                agentOutputs: {
-                  ...(prev.agentOutputs || {}),
-                  [progressData.agent]: progressData.output
-                }
-              }));
-            } else if (progressData.type === 'final') {
-              setStockData((prev: any) => ({
-                ...prev,
-                aiRecommendation: progressData.output.recommendation || prev.aiRecommendation,
-                aiScore: progressData.output.score || prev.aiScore,
-                confidence: progressData.output.confidence || prev.confidence,
-                summary: progressData.output.reasoning || prev.summary,
-                scoreBreakdown: progressData.output.scoreBreakdown || prev.scoreBreakdown,
-              }));
-            }
-          })
-            .catch(console.error)
-            .finally(() => setIsResearching(false));
+          if (isSignedIn) {
+            startResearch(ticker, (progressData) => {
+              if (progressData.type === 'agent') {
+                setStockData((prev: any) => ({
+                  ...prev,
+                  agentOutputs: {
+                    ...(prev.agentOutputs || {}),
+                    [progressData.agent]: progressData.output
+                  }
+                }));
+              } else if (progressData.type === 'final') {
+                setStockData((prev: any) => ({
+                  ...prev,
+                  aiRecommendation: progressData.output.recommendation || prev.aiRecommendation,
+                  aiScore: progressData.output.score || prev.aiScore,
+                  confidence: progressData.output.confidence || prev.confidence,
+                  summary: progressData.output.reasoning || prev.summary,
+                  scoreBreakdown: progressData.output.scoreBreakdown || prev.scoreBreakdown,
+                }));
+              }
+            })
+              .catch(console.error)
+              .finally(() => setIsResearching(false));
+          } else {
+            setIsResearching(false);
+          }
 
         } else {
           setStockData(baseData);
@@ -177,7 +183,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         setIsResearching(false);
       })
       .finally(() => setLoading(false));
-  }, [ticker]);
+  }, [ticker, isSignedIn, getStockData, startResearch]);
 
   if (loading || !stockData) {
     return <div className="container mx-auto px-4 py-20 text-center animate-pulse">Loading {ticker} insights...</div>;
@@ -295,128 +301,135 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                     </div>
                   </div>
 
-                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
-                    <div className="text-sm text-muted-foreground mb-1">AI Recommendation</div>
-                    <div>
-                      <div className={`text-xl font-bold ${data.aiRecommendation?.includes('BUY') ? 'text-success' : data.aiRecommendation?.includes('SELL') ? 'text-destructive' : 'text-primary'}`}>
-                        {data.aiRecommendation}
+                  <AuthGate message="Authentication required for AI ratings">
+                    <div className="flex flex-col gap-4 h-full">
+                      <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1">
+                        <div className="text-sm text-muted-foreground mb-1">AI Recommendation</div>
+                        <div>
+                          <div className={`text-xl font-bold ${data.aiRecommendation?.includes('BUY') ? 'text-success' : data.aiRecommendation?.includes('SELL') ? 'text-destructive' : 'text-primary'}`}>
+                            {data.aiRecommendation}
+                          </div>
+                          <div className="text-muted-foreground text-[10px] font-medium mt-1 leading-tight line-clamp-2">
+                             {displaySummary.split('.')[0]}.
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-muted-foreground text-[10px] font-medium mt-1 leading-tight line-clamp-2">
-                         {displaySummary.split('.')[0]}.
+                      
+                      <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1 relative group">
+                        <div className="text-sm text-muted-foreground flex items-center justify-between mb-1">AI Confidence <Info className="w-3 h-3 text-muted-foreground" /></div>
+                        <div className="absolute top-0 left-0 w-full h-full bg-card border border-border rounded-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex flex-col justify-center text-[10px] text-muted-foreground shadow-lg pointer-events-none">
+                           Based on data completeness, model agreement, and historical prediction accuracy.
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold mb-1">{(data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}</div>
+                          <div className="flex items-center gap-2">
+                             <Progress value={data.confidence || 0} className="h-1 flex-1 bg-muted [&>div]:bg-primary" />
+                             <span className="text-xs font-mono font-semibold">{data.confidence || 0}%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-center flex-1 relative group">
-                    <div className="text-sm text-muted-foreground flex items-center justify-between mb-1">AI Confidence <Info className="w-3 h-3 text-muted-foreground" /></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-card border border-border rounded-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex flex-col justify-center text-[10px] text-muted-foreground shadow-lg pointer-events-none">
-                       Based on data completeness, model agreement, and historical prediction accuracy.
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold mb-1">{(data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}</div>
-                      <div className="flex items-center gap-2">
-                         <Progress value={data.confidence || 0} className="h-1 flex-1 bg-muted [&>div]:bg-primary" />
-                         <span className="text-xs font-mono font-semibold">{data.confidence || 0}%</span>
-                      </div>
-                    </div>
-                  </div>
+                  </AuthGate>
                 </div>
               </div>
 
               {/* AI Summary & Score Breakdown */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      Structured AI Summary
-                      {isResearching && <span className="flex h-2 w-2 relative ml-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span></span>}
-                    </h3>
-                    <div className={`text-sm leading-relaxed mb-6 ${isFailedSummary ? 'text-destructive font-medium' : 'text-foreground/80'}`}>
-                      {isResearching ? `AI Agents are currently processing financial data, recent news, and market sentiment for ${ticker}. Please wait for the live analysis...` : displaySummary}
+              <AuthGate message="Sign in to view proprietary AI sentiment and deep score breakdown.">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        Structured AI Summary
+                        {isResearching && <span className="flex h-2 w-2 relative ml-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span></span>}
+                      </h3>
+                      <div className={`text-sm leading-relaxed mb-6 ${isFailedSummary ? 'text-destructive font-medium' : 'text-foreground/80'}`}>
+                        {isResearching ? `AI Agents are currently processing financial data, recent news, and market sentiment for ${ticker}. Please wait for the live analysis...` : displaySummary}
+                      </div>
+                      
+                      {!isResearching && !isFailedSummary && (
+                         <div className="grid grid-cols-2 gap-4 mb-6">
+                           <div>
+                              <div className="text-xs font-bold text-success mb-2 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Top Positive Factors</div>
+                              <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                                 <li>Strong revenue generation</li>
+                                 <li>Positive market sentiment</li>
+                                 <li>Robust industry growth</li>
+                              </ul>
+                           </div>
+                           <div>
+                              <div className="text-xs font-bold text-destructive mb-2 flex items-center gap-1"><XCircle className="w-3 h-3" /> Top Negative Factors</div>
+                              <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                                 <li>Premium valuation pricing</li>
+                                 <li>Regulatory scrutiny risks</li>
+                              </ul>
+                           </div>
+                         </div>
+                      )}
                     </div>
-                    
-                    {!isResearching && !isFailedSummary && (
-                       <div className="grid grid-cols-2 gap-4 mb-6">
-                         <div>
-                            <div className="text-xs font-bold text-success mb-2 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Top Positive Factors</div>
-                            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-                               <li>Strong revenue generation</li>
-                               <li>Positive market sentiment</li>
-                               <li>Robust industry growth</li>
-                            </ul>
-                         </div>
-                         <div>
-                            <div className="text-xs font-bold text-destructive mb-2 flex items-center gap-1"><XCircle className="w-3 h-3" /> Top Negative Factors</div>
-                            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-                               <li>Premium valuation pricing</li>
-                               <li>Regulatory scrutiny risks</li>
-                            </ul>
-                         </div>
-                       </div>
-                    )}
                   </div>
-                </div>
 
-                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
-                  <h3 className="font-semibold mb-6">Score Breakdown</h3>
-                  {(() => {
-                    const fR = safeParse(data.agentOutputs?.finance)?.score || 0;
-                    const nR = safeParse(data.agentOutputs?.news)?.score || 0;
-                    const iR = safeParse(data.agentOutputs?.industry)?.score || 0;
-                    const vR = safeParse(data.agentOutputs?.valuation)?.score || 0;
-                    const rR = safeParse(data.agentOutputs?.risk)?.score || 100; // default 100 risk is worst
-                    
-                    const f = Math.round(fR * 0.3);
-                    const n = Math.round(nR * 0.2);
-                    const ind = Math.round(iR * 0.2);
-                    const v = Math.round(vR * 0.2);
-                    const r = Math.round((100 - rR) * 0.1);
-                    
-                    const total = f + n + ind + v + r;
-                    const displayTotal = total > 0 ? total : (data.aiScore || 0); // fallback if agents haven't loaded
+                  <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+                    <h3 className="font-semibold mb-6">Score Breakdown</h3>
+                    {(() => {
+                      const fR = safeParse(data.agentOutputs?.finance)?.score || 0;
+                      const nR = safeParse(data.agentOutputs?.news)?.score || 0;
+                      const iR = safeParse(data.agentOutputs?.industry)?.score || 0;
+                      const vR = safeParse(data.agentOutputs?.valuation)?.score || 0;
+                      const rR = safeParse(data.agentOutputs?.risk)?.score || 100; // default 100 risk is worst
+                      
+                      const f = Math.round(fR * 0.3);
+                      const n = Math.round(nR * 0.2);
+                      const ind = Math.round(iR * 0.2);
+                      const v = Math.round(vR * 0.2);
+                      const r = Math.round((100 - rR) * 0.1);
+                      
+                      const total = f + n + ind + v + r;
+                      const displayTotal = total > 0 ? total : (data.aiScore || 0); // fallback if agents haven't loaded
 
-                    return (
-                      <div className="flex items-center gap-8">
-                        <div className="w-32 h-32 relative flex items-center justify-center shrink-0">
-                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--muted)" strokeWidth="12" />
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (displayTotal/100))} className="transition-all duration-1000" />
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--foreground)" strokeWidth="12" strokeDasharray="50 200" className="opacity-20" />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                             <span className="text-3xl font-bold font-mono">{displayTotal}</span>
-                             <span className="text-xs text-muted-foreground">/100</span>
+                      return (
+                        <div className="flex items-center gap-8">
+                          <div className="w-32 h-32 relative flex items-center justify-center shrink-0">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--muted)" strokeWidth="12" />
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (displayTotal/100))} className="transition-all duration-1000" />
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--foreground)" strokeWidth="12" strokeDasharray="50 200" className="opacity-20" />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                               <span className="text-3xl font-bold font-mono">{displayTotal}</span>
+                               <span className="text-xs text-muted-foreground">/100</span>
+                            </div>
+                          </div>
+                          <div className="flex-1 space-y-3">
+                            {[
+                              { label: 'Fundamentals', score: f, max: 30, color: 'bg-primary', tooltip: 'Evaluates revenue growth, profit margin, ROE, debt ratio, and free cash flow.' },
+                              { label: 'News & Sentiment', score: n, max: 20, color: 'bg-muted-foreground', tooltip: 'Measures recent media coverage, social media trends, and public perception.' },
+                              { label: 'Industry Outlook', score: ind, max: 20, color: 'bg-muted-foreground', tooltip: 'Assesses macro sector trends, competitive positioning, and market expansion.' },
+                              { label: 'Valuation', score: v, max: 20, color: 'bg-muted-foreground', tooltip: 'Analyzes intrinsic fair value, P/E multiples, and DCF growth models.' },
+                              { label: 'Risk Assessment', score: r, max: 10, color: 'bg-foreground', tooltip: 'Identifies macroeconomic sensitivity, supply chain, and regulatory risks (Inverted: lower risk yields higher score).' },
+                            ].map((item) => (
+                              <div key={item.label} className="group relative flex justify-between items-center text-sm cursor-help">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                                  <span className="text-muted-foreground group-hover:text-foreground transition-colors border-b border-dashed border-muted-foreground/30">{item.label}</span>
+                                </div>
+                                <span className="font-mono font-medium">{item.score}/{item.max}</span>
+                                <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-foreground text-background text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                  {item.tooltip}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div className="flex-1 space-y-3">
-                          {[
-                            { label: 'Fundamentals', score: f, max: 30, color: 'bg-primary', tooltip: 'Evaluates revenue growth, profit margin, ROE, debt ratio, and free cash flow.' },
-                            { label: 'News & Sentiment', score: n, max: 20, color: 'bg-muted-foreground', tooltip: 'Measures recent media coverage, social media trends, and public perception.' },
-                            { label: 'Industry Outlook', score: ind, max: 20, color: 'bg-muted-foreground', tooltip: 'Assesses macro sector trends, competitive positioning, and market expansion.' },
-                            { label: 'Valuation', score: v, max: 20, color: 'bg-muted-foreground', tooltip: 'Analyzes intrinsic fair value, P/E multiples, and DCF growth models.' },
-                            { label: 'Risk Assessment', score: r, max: 10, color: 'bg-foreground', tooltip: 'Identifies macroeconomic sensitivity, supply chain, and regulatory risks (Inverted: lower risk yields higher score).' },
-                          ].map((item) => (
-                            <div key={item.label} className="group relative flex justify-between items-center text-sm cursor-help">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                                <span className="text-muted-foreground group-hover:text-foreground transition-colors border-b border-dashed border-muted-foreground/30">{item.label}</span>
-                              </div>
-                              <span className="font-mono font-medium">{item.score}/{item.max}</span>
-                              <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-foreground text-background text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                {item.tooltip}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
+                  </div>
                 </div>
-              </div>
+              </AuthGate>
 
             </TabsContent>
             
             <TabsContent value="financials" className="mt-8 space-y-8">
+              <AuthGate message="Sign in to view proprietary AI financial breakdown.">
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center">
                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                     <span className="text-2xl font-bold text-muted-foreground">$</span>
@@ -531,9 +544,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                    })()
                  )}
                </div>
+              </AuthGate>
             </TabsContent>
 
             <TabsContent value="news & sentiment" className="mt-8 space-y-8">
+              <AuthGate message="Sign in to view AI-driven news and sentiment analysis.">
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
                  <h3 className="font-semibold mb-6">Latest News & Retail Sentiment</h3>
                  {data.agentOutputs?.news ? (
@@ -589,9 +604,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                    <div className="text-sm text-muted-foreground animate-pulse">Aggregating recent headlines and global sentiment from NewsAPI and StockTwits...</div>
                  )}
                </div>
+              </AuthGate>
             </TabsContent>
             
             <TabsContent value="valuation" className="mt-8 space-y-8">
+              <AuthGate message="Sign in to access AI intrinsic valuation and DCF models.">
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm min-h-[300px]">
                  <h3 className="font-semibold mb-6">DCF Valuation & Multiples</h3>
                  {data.agentOutputs?.valuation ? (
@@ -626,9 +643,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                    <div className="text-sm text-muted-foreground animate-pulse">Computing DCF models and peer multiples...</div>
                  )}
                </div>
+              </AuthGate>
             </TabsContent>
 
             <TabsContent value="risks" className="mt-8 space-y-8">
+              <AuthGate message="Sign in to view AI risk assessment and macro sensitivities.">
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
                  <h3 className="font-semibold mb-6">Comprehensive Risk Assessment</h3>
                  {data.agentOutputs?.risk ? (
@@ -677,11 +696,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                    <div className="text-sm text-muted-foreground animate-pulse">Identifying macroeconomic and operational risks...</div>
                  )}
                </div>
+              </AuthGate>
             </TabsContent>
             
             {/* Outlook tab removed */}
             
             <TabsContent value="ai debate" className="mt-8 space-y-8">
+              <AuthGate message="Sign in to access the autonomous AI committee consensus.">
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
                  <h3 className="font-semibold mb-6 flex items-center gap-2">
                    <Sparkles className="w-5 h-5 text-primary" /> AI Debate & Committee Consensus
@@ -748,6 +769,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                    })}
                  </div>
                </div>
+              </AuthGate>
             </TabsContent>
 
           </Tabs>
