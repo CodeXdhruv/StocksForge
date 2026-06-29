@@ -321,10 +321,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                            Based on data completeness, model agreement, and historical prediction accuracy.
                         </div>
                         <div>
-                          <div className="text-lg font-bold mb-1">{(data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}</div>
+                          <div className="text-lg font-bold mb-1">
+                            {isResearching ? 'Processing...' : (data.confidence || 0) > 75 ? 'High' : (data.confidence || 0) > 40 ? 'Medium' : 'Low'}
+                          </div>
                           <div className="flex items-center gap-2">
-                             <Progress value={data.confidence || 0} className="h-1 flex-1 bg-muted [&>div]:bg-primary" />
-                             <span className="text-xs font-mono font-semibold">{data.confidence || 0}%</span>
+                             <Progress value={isResearching ? 100 : (data.confidence || 0)} className={`h-1 flex-1 bg-muted [&>div]:bg-primary ${isResearching ? '[&>div]:animate-stripes' : ''}`} />
+                             <span className="text-xs font-mono font-semibold">{isResearching ? '--' : `${data.confidence || 0}%`}</span>
                           </div>
                         </div>
                       </div>
