@@ -1,11 +1,13 @@
 import { useAuth } from '@clerk/nextjs';
 import axios from 'axios';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001/api/v1';
 
 export function useApi() {
   const { getToken, isSignedIn } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   const apiClient = useMemo(() => {
     const client = axios.create({
@@ -17,7 +19,7 @@ export function useApi() {
 
     client.interceptors.request.use(async (config) => {
       try {
-        const token = await getToken();
+        const token = await getTokenRef.current();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -28,7 +30,7 @@ export function useApi() {
     });
 
     return client;
-  }, [getToken]);
+  }, []);
 
   const getWatchlist = useCallback(async () => {
     if (!isSignedIn) return { success: true, data: { watchlist: [] } };
@@ -57,7 +59,7 @@ export function useApi() {
   }, [apiClient]);
 
   const startResearch = useCallback(async (ticker: string, onProgress?: (data: any) => void) => {
-    const token = await getToken();
+    const token = await getTokenRef.current();
     const res = await fetch(`${BACKEND_URL}/research/start`, {
       method: 'POST',
       headers: {
@@ -100,7 +102,7 @@ export function useApi() {
     }
     
     return { data: finalData };
-  }, [getToken]);
+  }, []);
 
   const getMarketOverview = useCallback(async (category: string = 'Overview') => {
     const { data } = await apiClient.get(`/market/overview?category=${category}`);
